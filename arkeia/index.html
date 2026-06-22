@@ -1,0 +1,2638 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Presentación del ecosistema ArkeIA para mediación cultural contextual e inmersiva.">
+  <title>ArkeIA | El pasado cobra vida</title>
+
+  <!-- Tipografías del sistema Stencil & Tablet, adaptadas a la identidad ArkeIA. -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;600;700&family=Barlow+Condensed:wght@500;600;700;800;900&family=Stardos+Stencil:wght@400;700&display=swap" rel="stylesheet">
+
+  <style>
+    /* ===========================================
+       TEMA ARKEIA
+       Cambia estas variables para modificar todo el deck.
+       =========================================== */
+    :root {
+      --stage-bg: #07152d;
+      --slide-bg: #e9e2cf;
+      --bone: #e9e2cf;
+      --paper: #f7f1e3;
+      --ink: #07152d;
+      --night: #030a17;
+      --blue: #0d5eb8;
+      --blue-bright: #2f9cf4;
+      --blue-deep: #082f68;
+      --gold: #e6ad2e;
+      --gold-soft: #f2cc67;
+      --teal: #287d79;
+      --earth: #9a6238;
+      --rust: #c5552e;
+      --olive: #6f7830;
+      --line: rgba(7, 21, 45, 0.22);
+
+      --display: "Stardos Stencil", serif;
+      --meta: "Barlow Condensed", sans-serif;
+      --body: "Alegreya Sans", sans-serif;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* ===========================================
+       REINICIO GLOBAL
+       =========================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    /* ===========================================
+       FIXED 16:9 STAGE: MANDATORY BASE STYLES
+       Include this ENTIRE file in every presentation.
+       Slides are authored at 1920×1080 and scaled as a whole.
+       =========================================== */
+
+    /* 1. Lock the browser viewport */
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      margin: 0;
+      overflow: hidden;
+      background: var(--stage-bg, #000);
+    }
+
+    /* 2. Full-window deck viewport */
+    .deck-viewport {
+      position: fixed;
+      inset: 0;
+      overflow: hidden;
+      background: var(--stage-bg, #000);
+    }
+
+    /* 3. Fixed 16:9 design canvas.
+       JavaScript sets transform: translate(...) scale(...). */
+    .deck-stage {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      transform-origin: 0 0;
+      background: var(--slide-bg, #fff);
+    }
+
+    /* 4. Slides stack inside the fixed stage.
+       Content must be laid out at 1920×1080, not reflowed per device. */
+    .slide {
+      position: absolute;
+      inset: 0;
+      width: 1920px;
+      height: 1080px;
+      overflow: hidden;
+      display: block;
+      visibility: hidden;
+      opacity: 0;
+      pointer-events: none;
+      background: var(--slide-bg, #fff);
+    }
+
+    .slide.active,
+    .slide.visible {
+      visibility: visible;
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 1;
+    }
+
+    /* 5. Keep media inside authored slide bounds */
+    img,
+    video,
+    canvas,
+    svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    /* 6. Presentation chrome stays outside the slide design system */
+    .deck-controls {
+      position: fixed;
+      left: 50%;
+      bottom: 22px;
+      transform: translateX(-50%);
+      z-index: 1000;
+    }
+
+    /* 7. Print one fixed-size slide per page */
+    @media print {
+      html,
+      body {
+        width: 1920px;
+        height: auto;
+        overflow: visible;
+        background: #fff;
+      }
+
+      .deck-viewport {
+        position: static;
+        overflow: visible;
+        background: #fff;
+      }
+
+      .deck-stage {
+        position: static;
+        width: auto;
+        height: auto;
+        transform: none !important;
+        background: none;
+      }
+
+      .slide {
+        position: relative;
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        pointer-events: auto !important;
+        width: 1920px;
+        height: 1080px;
+        break-after: page;
+        page-break-after: always;
+      }
+
+      .slide:last-child {
+        break-after: auto;
+        page-break-after: auto;
+      }
+
+      .deck-controls {
+        display: none !important;
+      }
+    }
+
+    /* 8. Reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.2s !important;
+      }
+    }
+
+    /* ===========================================
+       BASE DE DIAPOSITIVAS
+       =========================================== */
+    .slide {
+      color: var(--ink);
+      font-family: var(--body);
+      transition: opacity 280ms ease;
+    }
+
+    .slide.dark {
+      --slide-bg: var(--night);
+      color: var(--bone);
+    }
+
+    .slide.blue-field {
+      --slide-bg: var(--blue-deep);
+      color: var(--bone);
+    }
+
+    .slide::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      opacity: 0.12;
+      background-image:
+        linear-gradient(90deg, transparent 49.7%, rgba(7, 21, 45, 0.11) 50%, transparent 50.3%),
+        linear-gradient(transparent 49.7%, rgba(7, 21, 45, 0.11) 50%, transparent 50.3%);
+      background-size: 92px 92px;
+      mix-blend-mode: multiply;
+    }
+
+    .dark::after,
+    .blue-field::after {
+      opacity: 0.08;
+      background-image:
+        linear-gradient(90deg, transparent 49.7%, rgba(233, 226, 207, 0.14) 50%, transparent 50.3%),
+        linear-gradient(transparent 49.7%, rgba(233, 226, 207, 0.14) 50%, transparent 50.3%);
+      mix-blend-mode: screen;
+    }
+
+    .slide-pad {
+      position: absolute;
+      inset: 48px 64px 42px;
+      z-index: 2;
+    }
+
+    .topbar,
+    .footer {
+      position: absolute;
+      left: 64px;
+      right: 64px;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: var(--meta);
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .topbar {
+      top: 42px;
+      font-size: 25px;
+    }
+
+    .footer {
+      bottom: 30px;
+      font-size: 19px;
+      opacity: 0.72;
+    }
+
+    .page-title {
+      font-family: var(--display);
+      font-size: 86px;
+      line-height: 0.94;
+      letter-spacing: -0.015em;
+      text-transform: uppercase;
+    }
+
+    .page-title.compact {
+      font-size: 66px;
+      line-height: 0.9;
+    }
+
+    .section-kicker {
+      font-family: var(--meta);
+      font-size: 25px;
+      font-weight: 900;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .body-copy {
+      font-size: 29px;
+      line-height: 1.35;
+      font-weight: 500;
+    }
+
+    .body-small {
+      font-size: 23px;
+      line-height: 1.35;
+    }
+
+    .muted {
+      opacity: 0.7;
+    }
+
+    .accent {
+      color: var(--gold);
+    }
+
+    .blue-accent {
+      color: var(--blue-bright);
+    }
+
+    .reveal {
+      opacity: 0;
+      transform: translateY(34px);
+      transition:
+        opacity 680ms var(--ease),
+        transform 680ms var(--ease);
+    }
+
+    .reveal-left {
+      opacity: 0;
+      transform: translateX(-52px);
+      transition:
+        opacity 760ms var(--ease),
+        transform 760ms var(--ease);
+    }
+
+    .reveal-scale {
+      opacity: 0;
+      transform: scale(0.94);
+      transition:
+        opacity 820ms var(--ease),
+        transform 820ms var(--ease);
+    }
+
+    .slide.visible .reveal,
+    .slide.visible .reveal-left,
+    .slide.visible .reveal-scale {
+      opacity: 1;
+      transform: none;
+    }
+
+    .delay-1 { transition-delay: 90ms; }
+    .delay-2 { transition-delay: 180ms; }
+    .delay-3 { transition-delay: 270ms; }
+    .delay-4 { transition-delay: 360ms; }
+    .delay-5 { transition-delay: 450ms; }
+    .delay-6 { transition-delay: 540ms; }
+
+    /* ===========================================
+       COMPONENTES VISUALES
+       =========================================== */
+    .tablet {
+      border-radius: 28px;
+      padding: 34px;
+      overflow: hidden;
+    }
+
+    .tablet.blue { background: var(--blue); color: var(--bone); }
+    .tablet.gold { background: var(--gold); color: var(--ink); }
+    .tablet.teal { background: var(--teal); color: var(--bone); }
+    .tablet.earth { background: var(--earth); color: var(--bone); }
+    .tablet.paper { background: var(--paper); color: var(--ink); }
+    .tablet.night { background: var(--night); color: var(--bone); }
+
+    .tablet-number {
+      font-family: var(--display);
+      font-size: 128px;
+      font-weight: 700;
+      line-height: 0.78;
+    }
+
+    .tablet h3 {
+      margin-top: 22px;
+      font-family: var(--display);
+      font-size: 34px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .tablet p {
+      margin-top: 18px;
+      font-size: 23px;
+      line-height: 1.25;
+    }
+
+    .image-frame {
+      position: relative;
+      border: 5px solid var(--ink);
+      border-radius: 30px;
+      overflow: hidden;
+      background: var(--night);
+    }
+
+    .image-frame img,
+    .image-frame video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .image-frame.contain img {
+      object-fit: contain;
+    }
+
+    .image-label {
+      position: absolute;
+      left: 24px;
+      bottom: 24px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--ink);
+      font-family: var(--meta);
+      font-size: 20px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 9px 17px;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+      font-family: var(--meta);
+      font-size: 19px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .pill-dot {
+      width: 11px;
+      height: 11px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .quote {
+      font-family: var(--display);
+      font-size: 66px;
+      line-height: 1.06;
+      text-transform: uppercase;
+    }
+
+    .big-stat {
+      font-family: var(--display);
+      font-size: 158px;
+      line-height: 0.82;
+    }
+
+    .stat-label {
+      margin-top: 18px;
+      font-family: var(--meta);
+      font-size: 25px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .source-note {
+      position: absolute;
+      left: 66px;
+      right: 66px;
+      bottom: 58px;
+      z-index: 6;
+      font-family: var(--meta);
+      font-size: 17px;
+      font-weight: 600;
+      letter-spacing: 0.035em;
+      opacity: 0.68;
+    }
+
+    /* ===========================================
+       SLIDE 01 — PORTADA
+       =========================================== */
+    .cover {
+      background: var(--night);
+    }
+
+    .cover-media {
+      position: absolute;
+      inset: 0 47% 0 0;
+      overflow: hidden;
+    }
+
+    .cover-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: 56% center;
+      filter: brightness(0.62) saturate(0.86);
+    }
+
+    .cover-media::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 10, 23, 0.22);
+      border-right: 10px solid var(--gold);
+    }
+
+    .cover-panel {
+      position: absolute;
+      inset: 0 0 0 53%;
+      padding: 80px 80px 66px 84px;
+      color: var(--bone);
+      display: flex;
+      flex-direction: column;
+      z-index: 2;
+    }
+
+    .cover-logo {
+      width: 660px;
+      height: 280px;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .cover h1 {
+      margin-top: 28px;
+      font-family: var(--display);
+      font-size: 144px;
+      line-height: 0.83;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
+    }
+
+    .cover-tagline {
+      margin-top: 40px;
+      max-width: 700px;
+      color: var(--gold-soft);
+      font-family: var(--meta);
+      font-size: 38px;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .cover-meta {
+      margin-top: auto;
+      padding-bottom: 86px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 22px;
+      font-family: var(--meta);
+      font-size: 24px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .institution-row {
+      position: absolute;
+      right: 68px;
+      bottom: 38px;
+      z-index: 4;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .institution-row img {
+      height: 58px;
+      width: auto;
+      border-radius: 8px;
+      background: white;
+    }
+
+    /* ===========================================
+       SLIDE 02 — CONTENIDO
+       =========================================== */
+    .agenda-grid {
+      position: absolute;
+      left: 70px;
+      right: 70px;
+      top: 176px;
+      bottom: 94px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .agenda-card {
+      position: relative;
+      border-radius: 28px;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .agenda-card .n {
+      font-family: var(--display);
+      font-size: 118px;
+      line-height: 0.8;
+    }
+
+    .agenda-card h3 {
+      max-width: 390px;
+      font-family: var(--display);
+      font-size: 35px;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+
+    /* ===========================================
+       SLIDE 03 — PROBLEMA
+       =========================================== */
+    .problem-layout {
+      position: absolute;
+      inset: 158px 64px 86px;
+      display: grid;
+      grid-template-columns: 0.9fr 1.1fr;
+      gap: 26px;
+    }
+
+    .problem-statement {
+      padding: 54px;
+      border-radius: 30px;
+      background: var(--night);
+      color: var(--bone);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .problem-statement .mega {
+      color: var(--gold);
+      font-family: var(--display);
+      font-size: 236px;
+      line-height: 0.7;
+    }
+
+    .problem-statement h2 {
+      font-family: var(--display);
+      font-size: 66px;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+
+    .problem-cards {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 26px;
+    }
+
+    /* ===========================================
+       SLIDE 04 — EVIDENCIA DEL CONTEXTO
+       =========================================== */
+    .evidence-layout {
+      position: absolute;
+      inset: 248px 66px 116px;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .evidence-card {
+      position: relative;
+      border-radius: 28px;
+      padding: 28px 36px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+    }
+
+    .evidence-card .big-stat {
+      font-size: 118px;
+    }
+
+    .evidence-card h3 {
+      font-family: var(--display);
+      font-size: 34px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .evidence-card p {
+      margin-top: 14px;
+      font-size: 23px;
+      line-height: 1.25;
+    }
+
+    .evidence-card .citation {
+      margin-top: 18px;
+      font-family: var(--meta);
+      font-size: 18px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      opacity: 0.72;
+    }
+
+    /* ===========================================
+       SLIDE 05 — ESTADO DEL ARTE
+       =========================================== */
+    .art-matrix {
+      position: absolute;
+      left: 66px;
+      right: 66px;
+      top: 212px;
+      border-radius: 26px;
+      overflow: hidden;
+      background: var(--paper);
+      color: var(--ink);
+    }
+
+    .art-row {
+      display: grid;
+      grid-template-columns: 2.05fr repeat(4, 1fr);
+      min-height: 92px;
+    }
+
+    .art-row > div {
+      padding: 18px 22px;
+      border-right: 1.5px solid var(--line);
+      border-bottom: 1.5px solid var(--line);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 21px;
+      line-height: 1.15;
+    }
+
+    .art-row > div:first-child {
+      justify-content: flex-start;
+      text-align: left;
+      font-family: var(--display);
+      font-size: 24px;
+      text-transform: uppercase;
+    }
+
+    .art-row > div:last-child {
+      border-right: 0;
+    }
+
+    .art-row:last-child > div {
+      border-bottom: 0;
+    }
+
+    .art-row.header {
+      min-height: 70px;
+      background: var(--night);
+      color: var(--bone);
+      font-family: var(--meta);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .art-row.header > div:first-child {
+      font-family: var(--meta);
+      font-size: 18px;
+    }
+
+    .status {
+      display: inline-flex;
+      min-width: 92px;
+      justify-content: center;
+      padding: 7px 13px;
+      border-radius: 999px;
+      font-family: var(--meta);
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .status.yes { background: var(--teal); color: var(--bone); }
+    .status.partial { background: var(--gold); color: var(--ink); }
+    .status.no { background: var(--earth); color: var(--bone); }
+
+    .art-conclusion {
+      position: absolute;
+      left: 400px;
+      right: 400px;
+      bottom: 86px;
+      padding: 20px 28px;
+      border-radius: 20px;
+      background: var(--gold);
+      color: var(--ink);
+      text-align: center;
+      font-family: var(--meta);
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+    }
+
+    /* ===========================================
+       SLIDE 04 — JUSTIFICACIÓN
+       =========================================== */
+    .value-chain {
+      position: absolute;
+      left: 74px;
+      right: 74px;
+      top: 276px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 18px;
+    }
+
+    .value-node {
+      position: relative;
+      min-height: 500px;
+      padding: 34px 28px;
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .value-node::after {
+      content: "→";
+      position: absolute;
+      right: -26px;
+      top: 44%;
+      z-index: 4;
+      color: var(--gold);
+      font-family: var(--display);
+      font-size: 52px;
+    }
+
+    .value-node:last-child::after {
+      display: none;
+    }
+
+    .value-node .icon {
+      font-family: var(--display);
+      font-size: 82px;
+      line-height: 1;
+    }
+
+    .value-node h3 {
+      font-family: var(--display);
+      font-size: 31px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .value-node p {
+      font-size: 21px;
+      line-height: 1.25;
+    }
+
+    /* ===========================================
+       SLIDE 05 — OBJETIVOS
+       =========================================== */
+    .objective-hero {
+      position: absolute;
+      left: 70px;
+      top: 188px;
+      width: 820px;
+      height: 760px;
+      border-radius: 30px;
+      padding: 58px;
+      background: var(--blue);
+      color: var(--bone);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .objective-hero .mega {
+      font-family: var(--display);
+      font-size: 250px;
+      line-height: 0.75;
+      color: var(--gold);
+    }
+
+    .objective-hero h2 {
+      font-family: var(--display);
+      font-size: 48px;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+
+    .objective-list {
+      position: absolute;
+      left: 924px;
+      right: 70px;
+      top: 188px;
+      bottom: 132px;
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .objective-item {
+      display: grid;
+      grid-template-columns: 128px 1fr;
+      gap: 26px;
+      align-items: center;
+      padding: 28px 36px;
+      border-radius: 26px;
+    }
+
+    .objective-item .n {
+      font-family: var(--display);
+      font-size: 100px;
+      line-height: 0.8;
+    }
+
+    .objective-item p {
+      font-size: 29px;
+      line-height: 1.23;
+      font-weight: 600;
+    }
+
+    /* ===========================================
+       SLIDE 06 — MARCO TEÓRICO
+       =========================================== */
+    .framework-grid {
+      position: absolute;
+      inset: 244px 70px 108px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .framework-card {
+      position: relative;
+      border-radius: 28px;
+      padding: 30px 32px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .framework-card .symbol {
+      width: 90px;
+      height: 90px;
+      border: 4px solid currentColor;
+      border-radius: 50%;
+      display: grid;
+      place-items: center;
+      font-family: var(--display);
+      font-size: 39px;
+    }
+
+    .framework-card h3 {
+      font-family: var(--display);
+      font-size: 29px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .framework-card p {
+      margin-top: 12px;
+      font-size: 20px;
+      line-height: 1.22;
+    }
+
+    /* ===========================================
+       SLIDE 09 — CRITERIOS TECNOLÓGICOS
+       =========================================== */
+    .decision-grid {
+      position: absolute;
+      inset: 244px 66px 118px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 22px;
+    }
+
+    .decision-card {
+      border-radius: 28px;
+      padding: 34px 30px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .decision-card .decision-mark {
+      font-family: var(--display);
+      font-size: 92px;
+      line-height: 0.8;
+    }
+
+    .decision-card h3 {
+      margin-top: auto;
+      font-family: var(--display);
+      font-size: 32px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .decision-card p {
+      margin-top: 17px;
+      font-size: 21px;
+      line-height: 1.23;
+    }
+
+    /* ===========================================
+       SLIDE 07 — METODOLOGÍA
+       =========================================== */
+    .method-track {
+      position: absolute;
+      left: 66px;
+      right: 66px;
+      top: 280px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 20px;
+    }
+
+    .method-step {
+      position: relative;
+      height: 410px;
+      padding: 32px 28px;
+      border-radius: 26px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .method-step .n {
+      font-family: var(--display);
+      font-size: 90px;
+      line-height: 0.8;
+    }
+
+    .method-step h3 {
+      margin-top: auto;
+      font-family: var(--display);
+      font-size: 31px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .method-step p {
+      margin-top: 16px;
+      font-size: 21px;
+      line-height: 1.22;
+    }
+
+    .method-line {
+      position: absolute;
+      left: 110px;
+      right: 110px;
+      bottom: 126px;
+      height: 52px;
+      border-radius: 18px;
+      background: var(--paper);
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      color: var(--ink);
+      font-family: var(--meta);
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* ===========================================
+       SLIDE 08 — ARQUITECTURA
+       =========================================== */
+    .ecosystem {
+      position: absolute;
+      inset: 172px 62px 90px;
+    }
+
+    .ecosystem-core {
+      position: absolute;
+      left: 730px;
+      top: 230px;
+      width: 340px;
+      height: 340px;
+      border: 8px solid var(--gold);
+      border-radius: 50%;
+      background: var(--blue-deep);
+      color: var(--bone);
+      display: grid;
+      place-items: center;
+      text-align: center;
+      z-index: 4;
+    }
+
+    .ecosystem-core img {
+      width: 210px;
+      height: 210px;
+      object-fit: contain;
+    }
+
+    .system-node {
+      position: absolute;
+      width: 360px;
+      min-height: 180px;
+      border-radius: 26px;
+      padding: 28px 30px;
+      z-index: 3;
+    }
+
+    .system-node.has-image {
+      color: var(--bone);
+      border: 2px solid rgba(255, 255, 255, 0.24);
+      background:
+        linear-gradient(110deg, rgba(3, 10, 23, 0.94), rgba(3, 10, 23, 0.7)),
+        var(--node-image) center / cover no-repeat;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+    }
+
+    .system-node.has-image h3,
+    .system-node.has-image p {
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.9);
+    }
+
+    .system-node h3 {
+      font-family: var(--display);
+      font-size: 34px;
+      text-transform: uppercase;
+    }
+
+    .system-node p {
+      margin-top: 12px;
+      font-size: 22px;
+      line-height: 1.22;
+    }
+
+    .node-iot { left: 40px; top: 55px; }
+    .node-app { left: 40px; top: 525px; }
+    .node-rag { right: 40px; top: 55px; }
+    .node-3d { right: 40px; top: 525px; }
+    .node-video { left: 720px; top: 610px; width: 380px; }
+
+    .connector-map {
+      position: absolute;
+      inset: 0;
+      z-index: 1;
+      overflow: visible;
+    }
+
+    .connector-map path {
+      fill: none;
+      stroke: var(--gold);
+      stroke-width: 6;
+      stroke-linecap: round;
+      stroke-dasharray: 18 16;
+      animation: dash 2.4s linear infinite;
+    }
+
+    @keyframes dash {
+      to { stroke-dashoffset: -68; }
+    }
+
+    /* ===========================================
+       SLIDE 09 — RECORRIDO
+       =========================================== */
+    .journey-strip {
+      position: absolute;
+      left: 60px;
+      right: 60px;
+      top: 260px;
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 14px;
+    }
+
+    .journey-step {
+      position: relative;
+      height: 420px;
+      border-radius: 25px;
+      padding: 26px 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .journey-step::after {
+      content: "›";
+      position: absolute;
+      right: -16px;
+      top: 42%;
+      z-index: 5;
+      color: var(--gold);
+      font-family: var(--display);
+      font-size: 66px;
+    }
+
+    .journey-step:last-child::after {
+      display: none;
+    }
+
+    .journey-icon {
+      font-family: var(--display);
+      font-size: 66px;
+      line-height: 1;
+    }
+
+    .journey-step h3 {
+      font-family: var(--display);
+      font-size: 28px;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .journey-step p {
+      font-size: 20px;
+      line-height: 1.2;
+    }
+
+    .journey-caption {
+      position: absolute;
+      left: 340px;
+      right: 340px;
+      bottom: 92px;
+      padding: 22px 30px;
+      border-radius: 22px;
+      background: var(--gold);
+      color: var(--ink);
+      text-align: center;
+      font-family: var(--meta);
+      font-size: 27px;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+    }
+
+    /* ===========================================
+       SLIDE 10 — APP E IOT
+       =========================================== */
+    .product-layout {
+      position: absolute;
+      inset: 160px 64px 88px;
+      display: grid;
+      grid-template-columns: 1.23fr 0.77fr;
+      gap: 28px;
+    }
+
+    .product-image {
+      border-radius: 30px;
+      overflow: hidden;
+      border: 5px solid var(--ink);
+      background: var(--night);
+    }
+
+    .product-image img {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      display: block;
+    }
+
+    .product-notes {
+      display: grid;
+      grid-template-rows: repeat(3, 1fr);
+      gap: 22px;
+    }
+
+    .demo-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 18px;
+      padding: 10px 16px;
+      width: fit-content;
+      border: 2px solid currentColor;
+      border-radius: 999px;
+      color: inherit;
+      font-family: var(--meta);
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.06em;
+      text-decoration: none;
+      text-transform: uppercase;
+    }
+
+    .demo-link::after {
+      content: "↗";
+      font-size: 20px;
+    }
+
+    .demo-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    /* ===========================================
+       SLIDE 11 — IA Y 3D
+       =========================================== */
+    .dual-showcase {
+      position: absolute;
+      inset: 175px 64px 92px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 28px;
+    }
+
+    .showcase-panel {
+      position: relative;
+      overflow: hidden;
+      border-radius: 30px;
+      background: var(--night);
+      color: var(--bone);
+    }
+
+    .showcase-panel img {
+      width: 100%;
+      height: calc(100% - 190px);
+      padding: 18px;
+      object-fit: contain;
+      opacity: 0.9;
+      display: block;
+    }
+
+    .showcase-overlay {
+      position: absolute;
+      inset: auto 0 0;
+      min-height: 190px;
+      padding: 38px;
+      background: rgba(3, 10, 23, 0.86);
+    }
+
+    .showcase-overlay h3 {
+      font-family: var(--display);
+      font-size: 43px;
+      text-transform: uppercase;
+    }
+
+    .showcase-overlay p {
+      margin-top: 14px;
+      font-size: 24px;
+      line-height: 1.28;
+    }
+
+    /* ===========================================
+       SLIDE 12 — VR
+       =========================================== */
+    .vr-hero {
+      position: absolute;
+      inset: 0;
+      background: var(--night);
+    }
+
+    .vr-hero img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: brightness(0.62);
+    }
+
+    .vr-hero::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: rgba(3, 10, 23, 0.22);
+    }
+
+    .vr-copy {
+      position: absolute;
+      left: 70px;
+      top: 170px;
+      z-index: 4;
+      width: 690px;
+      padding: 48px;
+      border-radius: 30px;
+      background: rgba(3, 10, 23, 0.91);
+      color: var(--bone);
+    }
+
+    .vr-copy h2 {
+      font-family: var(--display);
+      font-size: 74px;
+      line-height: 0.95;
+      text-transform: uppercase;
+    }
+
+    .vr-copy p {
+      margin-top: 25px;
+      font-size: 29px;
+      line-height: 1.28;
+    }
+
+    .vr-features {
+      margin-top: 30px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    /* ===========================================
+       SLIDE 13 — COMUNIDAD
+       =========================================== */
+    .video-grid {
+      position: absolute;
+      inset: 166px 64px 94px;
+      display: grid;
+      grid-template-columns: 0.8fr 0.8fr 1.2fr;
+      gap: 24px;
+    }
+
+    .video-card {
+      position: relative;
+      overflow: hidden;
+      border-radius: 28px;
+      background: var(--night);
+      border: 4px solid var(--ink);
+    }
+
+    .video-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-card::after {
+      content: attr(data-label);
+      position: absolute;
+      left: 18px;
+      bottom: 18px;
+      padding: 9px 16px;
+      border-radius: 999px;
+      background: var(--gold);
+      color: var(--ink);
+      font-family: var(--meta);
+      font-size: 18px;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .video-card::before {
+      content: "";
+      position: absolute;
+      right: 16px;
+      top: 16px;
+      z-index: 4;
+      width: 82px;
+      height: 82px;
+      border-radius: 18px;
+      background:
+        var(--blue-deep)
+        url("assets/arkeia-logo.png")
+        center / 72px 72px
+        no-repeat;
+      pointer-events: none;
+    }
+
+    .community-copy {
+      border-radius: 28px;
+      padding: 42px;
+      background: var(--blue-deep);
+      color: var(--bone);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .community-copy h2 {
+      font-family: var(--display);
+      font-size: 62px;
+      line-height: 0.96;
+      text-transform: uppercase;
+    }
+
+    .community-copy p {
+      margin-top: 28px;
+      font-size: 27px;
+      line-height: 1.3;
+    }
+
+    .community-copy .quote-mini {
+      margin-top: auto;
+      color: var(--gold-soft);
+      font-family: var(--meta);
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+
+    /* ===========================================
+       SLIDE 14 — RESULTADOS
+       =========================================== */
+    .results-grid {
+      position: absolute;
+      inset: 190px 66px 116px;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      gap: 24px;
+    }
+
+    .result-card {
+      border-radius: 28px;
+      padding: 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .result-card .big-stat {
+      font-size: 126px;
+    }
+
+    .result-card p {
+      font-size: 24px;
+      line-height: 1.24;
+    }
+
+    /* ===========================================
+       SLIDE 15 — PRÓXIMOS PASOS
+       =========================================== */
+    .next-layout {
+      position: absolute;
+      inset: 180px 64px 100px;
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 28px;
+    }
+
+    .next-list {
+      display: grid;
+      grid-template-rows: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .next-item {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      align-items: center;
+      gap: 24px;
+      border-radius: 24px;
+      padding: 24px 30px;
+    }
+
+    .next-item .n {
+      font-family: var(--display);
+      font-size: 70px;
+      line-height: 0.8;
+    }
+
+    .next-item h3 {
+      font-family: var(--display);
+      font-size: 30px;
+      text-transform: uppercase;
+    }
+
+    .next-item p {
+      margin-top: 7px;
+      font-size: 21px;
+      line-height: 1.2;
+    }
+
+    .closing-card {
+      border-radius: 28px;
+      padding: 48px;
+      background: var(--night);
+      color: var(--bone);
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+    }
+
+    .closing-card img {
+      width: 500px;
+      height: 220px;
+      object-fit: contain;
+      object-position: left center;
+    }
+
+    .closing-card h2 {
+      margin-top: auto;
+      font-family: var(--display);
+      font-size: 64px;
+      line-height: 0.98;
+      text-transform: uppercase;
+    }
+
+    .closing-card p {
+      margin-top: 22px;
+      color: var(--gold-soft);
+      font-family: var(--meta);
+      font-size: 30px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    /* ===========================================
+       CONTROLES Y EDICIÓN
+       =========================================== */
+    .deck-controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 12px;
+      border: 1px solid rgba(233, 226, 207, 0.22);
+      border-radius: 999px;
+      background: rgba(3, 10, 23, 0.82);
+      color: var(--bone);
+      backdrop-filter: blur(14px);
+    }
+
+    .deck-controls button {
+      width: 36px;
+      height: 36px;
+      border: 0;
+      border-radius: 50%;
+      background: transparent;
+      color: inherit;
+      cursor: pointer;
+      font-size: 22px;
+    }
+
+    .deck-controls button:hover {
+      background: rgba(233, 226, 207, 0.14);
+    }
+
+    .page-indicator {
+      min-width: 72px;
+      text-align: center;
+      font-family: var(--meta);
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+    }
+
+    .progress-track {
+      width: 130px;
+      height: 5px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(233, 226, 207, 0.2);
+    }
+
+    .progress-fill {
+      width: 0;
+      height: 100%;
+      background: var(--gold);
+      transition: width 260ms ease;
+    }
+
+    .edit-hotzone {
+      position: fixed;
+      left: 0;
+      top: 0;
+      width: 90px;
+      height: 90px;
+      z-index: 10000;
+      cursor: pointer;
+    }
+
+    .edit-toggle {
+      position: fixed;
+      left: 18px;
+      top: 18px;
+      z-index: 10001;
+      width: 48px;
+      height: 48px;
+      border: 1px solid rgba(233, 226, 207, 0.25);
+      border-radius: 50%;
+      opacity: 0;
+      pointer-events: none;
+      background: rgba(3, 10, 23, 0.9);
+      color: var(--bone);
+      cursor: pointer;
+      transition: opacity 240ms ease;
+    }
+
+    .edit-toggle.show,
+    .edit-toggle.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .edit-mode [data-editable="true"] {
+      outline: 3px dashed var(--gold);
+      outline-offset: 5px;
+      cursor: text;
+    }
+
+    .edit-toast {
+      position: fixed;
+      right: 22px;
+      top: 22px;
+      z-index: 10002;
+      padding: 12px 18px;
+      border-radius: 999px;
+      opacity: 0;
+      transform: translateY(-12px);
+      background: var(--gold);
+      color: var(--ink);
+      font-family: var(--meta);
+      font-size: 17px;
+      font-weight: 900;
+      letter-spacing: 0.07em;
+      text-transform: uppercase;
+      transition: 250ms ease;
+    }
+
+    .edit-toast.show {
+      opacity: 1;
+      transform: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="deck-viewport">
+    <main class="deck-stage" id="deckStage" aria-live="polite">
+      <!-- ===========================================
+           01. PORTADA
+           =========================================== -->
+      <section class="slide cover active visible" data-title="Portada">
+        <div class="cover-media reveal-scale">
+          <img src="assets/app-experience.png" alt="Experiencia móvil contextual de ArkeIA">
+        </div>
+        <div class="cover-panel">
+          <img class="cover-logo reveal" src="assets/arkeia-logo-horizontal-cropped.png" alt="ArkeIA">
+          <p class="section-kicker accent reveal delay-1" data-editable="true">Mediación cultural contextual e inmersiva</p>
+          <h1 class="reveal delay-2" data-editable="true">ArkeIA</h1>
+          <p class="cover-tagline reveal delay-3" data-editable="true">El pasado cobra vida</p>
+          <div class="cover-meta reveal delay-4">
+            <span data-editable="true">Equipo: ArkeIA</span>
+            <span data-editable="true">Junio 2026</span>
+            <span data-editable="true">Expositor: Equipo ArkeIA</span>
+            <span data-editable="true">Make It Happen</span>
+          </div>
+        </div>
+        <div class="institution-row reveal delay-5">
+          <img src="assets/uni-hub.png" alt="Universidad Nacional de Ingeniería">
+          <img src="assets/make-it-happen.png" alt="Make It Happen">
+        </div>
+      </section>
+
+      <!-- ===========================================
+           02. CONTENIDO
+           =========================================== -->
+      <section class="slide dark" data-title="Contenido">
+        <div class="topbar">
+          <span>Contenido</span>
+          <span>ArkeIA · Presentación del proyecto</span>
+        </div>
+        <div class="agenda-grid">
+          <article class="agenda-card tablet earth reveal">
+            <span class="n">01</span>
+            <h3 data-editable="true">Problema y estado del arte</h3>
+          </article>
+          <article class="agenda-card tablet gold reveal delay-1">
+            <span class="n">02</span>
+            <h3 data-editable="true">Justificación</h3>
+          </article>
+          <article class="agenda-card tablet teal reveal delay-2">
+            <span class="n">03</span>
+            <h3 data-editable="true">Objetivos</h3>
+          </article>
+          <article class="agenda-card tablet blue reveal delay-3">
+            <span class="n">04</span>
+            <h3 data-editable="true">Marco teórico</h3>
+          </article>
+          <article class="agenda-card tablet paper reveal delay-4">
+            <span class="n">05</span>
+            <h3 data-editable="true">Metodología y avances</h3>
+          </article>
+          <article class="agenda-card tablet gold reveal delay-5">
+            <span class="n">06</span>
+            <h3 data-editable="true">Resultados y próximos pasos</h3>
+          </article>
+        </div>
+        <div class="footer"><span>02 / Contenido</span><span>El pasado cobra vida</span></div>
+      </section>
+
+      <!-- ===========================================
+           03. PROBLEMA Y ESTADO DEL ARTE
+           =========================================== -->
+      <section class="slide" data-title="Problema">
+        <div class="topbar">
+          <span>01 · Problema y estado del arte</span>
+          <span>Visitas fragmentadas</span>
+        </div>
+        <div class="problem-layout">
+          <article class="problem-statement reveal-left">
+            <span class="mega">?</span>
+            <h2 data-editable="true">Los museos necesitan entregar información situada, accesible y confiable sin elevar la complejidad operativa.</h2>
+          </article>
+          <div class="problem-cards">
+            <article class="tablet gold reveal delay-1">
+              <span class="tablet-number">01</span>
+              <h3 data-editable="true">Mediación estática</h3>
+              <p data-editable="true">Cartelas, recorridos lineales y audioguías poco adaptativas no consideran el momento ni el lugar de observación.</p>
+            </article>
+            <article class="tablet teal reveal delay-2">
+              <span class="tablet-number">02</span>
+              <h3 data-editable="true">Contexto perdido</h3>
+              <p data-editable="true">La información no se ajusta con suficiente precisión a la sala, zona, obra probable o ritmo del visitante.</p>
+            </article>
+            <article class="tablet earth reveal delay-3">
+              <span class="tablet-number">03</span>
+              <h3 data-editable="true">Accesibilidad limitada</h3>
+              <p data-editable="true">La dependencia de lectura sostenida y navegación manual crea barreras para distintos perfiles de usuario.</p>
+            </article>
+            <article class="tablet blue reveal delay-4">
+              <span class="tablet-number">04</span>
+              <h3 data-editable="true">Restricción institucional</h3>
+              <p data-editable="true">Los museos necesitan soluciones sostenibles, modulares y compatibles con presupuestos y capacidades heterogéneas.</p>
+            </article>
+          </div>
+        </div>
+        <p class="source-note">Síntesis basada en la tesis, secciones 1.2, 2.2 y 6.2.</p>
+        <div class="footer"><span>03 / Problema</span><span>ArkeIA</span></div>
+      </section>
+
+      <!-- ===========================================
+           04. EVIDENCIA DEL CONTEXTO
+           =========================================== -->
+      <section class="slide blue-field" data-title="Evidencia">
+        <div class="topbar">
+          <span>01 · Problema y estado del arte</span>
+          <span>Condiciones habilitantes y brechas</span>
+        </div>
+        <div style="position:absolute; left:66px; top:104px; right:66px; z-index:3;">
+          <h2 class="page-title compact reveal" data-editable="true">El dispositivo ya está. Falta activar el contexto.</h2>
+        </div>
+        <div class="evidence-layout">
+          <article class="evidence-card tablet gold reveal delay-1">
+            <span class="big-stat">94.8%</span>
+            <div>
+              <h3 data-editable="true">Hogares peruanos con smartphone</h3>
+              <p data-editable="true">La cobertura alcanzada en 2024 habilita un enfoque BYOD sin entregar un dispositivo por visitante.</p>
+              <span class="citation">OSIPTEL [2]</span>
+            </div>
+          </article>
+          <article class="evidence-card tablet teal reveal delay-2">
+            <span class="big-stat">1.79 M</span>
+            <div>
+              <h3 data-editable="true">Visitas a museos estatales en 2024</h3>
+              <p data-editable="true">La recuperación pospandemia confirma una masa crítica para probar nuevas formas de mediación presencial.</p>
+              <span class="citation">Ministerio de Cultura [9]</span>
+            </div>
+          </article>
+          <article class="evidence-card tablet earth reveal delay-3">
+            <span class="big-stat">96%</span>
+            <div>
+              <h3 data-editable="true">Identificación de sala con BLE</h3>
+              <p data-editable="true">Un despliegue en el Foz Côa Museum validó que reconocer ambientes puede ser útil sin precisión centimétrica.</p>
+              <span class="citation">Verde et al., 2023 [13]</span>
+            </div>
+          </article>
+          <article class="evidence-card tablet paper reveal delay-4">
+            <span class="big-stat">2.47%</span>
+            <div>
+              <h3 data-editable="true">Descarga reportada de apps de audioguía</h3>
+              <p data-editable="true">La fricción de instalación obliga a diseñar una experiencia ligera, útil desde el primer contacto y con alternativas QR.</p>
+              <span class="citation">Sala, 2025 [23]</span>
+            </div>
+          </article>
+        </div>
+        <div class="footer"><span>04 / Evidencia</span><span>Perú · 2024</span></div>
+      </section>
+
+      <!-- ===========================================
+           05. ESTADO DEL ARTE
+           =========================================== -->
+      <section class="slide dark" data-title="Estado del arte">
+        <div class="topbar">
+          <span>01 · Problema y estado del arte</span>
+          <span>Las capacidades existen, pero suelen estar fragmentadas</span>
+        </div>
+        <div style="position:absolute; left:66px; top:102px; right:66px; z-index:3;">
+          <h2 class="page-title reveal" data-editable="true">Oferta tecnológica comparada</h2>
+        </div>
+        <div class="art-matrix reveal delay-1">
+          <div class="art-row header">
+            <div>Solución / referente</div>
+            <div>BYOD</div>
+            <div>Contexto espacial</div>
+            <div>Voz</div>
+            <div>IA con fuentes</div>
+          </div>
+          <div class="art-row">
+            <div>Bloomberg Connects</div>
+            <div><span class="status yes">Sí</span></div>
+            <div><span class="status no">No central</span></div>
+            <div><span class="status no">No central</span></div>
+            <div><span class="status partial">Limitada</span></div>
+          </div>
+          <div class="art-row">
+            <div>Smartify / SmartGuide</div>
+            <div><span class="status yes">Sí</span></div>
+            <div><span class="status no">No central</span></div>
+            <div><span class="status partial">Parcial</span></div>
+            <div><span class="status partial">Parcial</span></div>
+          </div>
+          <div class="art-row">
+            <div>Locatify / Navigine</div>
+            <div><span class="status yes">Sí</span></div>
+            <div><span class="status yes">BLE / indoor</span></div>
+            <div><span class="status no">No central</span></div>
+            <div><span class="status no">Baja</span></div>
+          </div>
+          <div class="art-row">
+            <div>Verde (BLE) / Wang (voz)</div>
+            <div><span class="status partial">Prototipo</span></div>
+            <div><span class="status partial">Separado</span></div>
+            <div><span class="status partial">Separado</span></div>
+            <div><span class="status no">No</span></div>
+          </div>
+          <div class="art-row" style="background:rgba(230,173,46,.18);">
+            <div>ArkeIA</div>
+            <div><span class="status yes">Sí</span></div>
+            <div><span class="status yes">Sala / zona</span></div>
+            <div><span class="status yes">TTS / STT</span></div>
+            <div><span class="status yes">RAG</span></div>
+          </div>
+        </div>
+        <div class="art-conclusion reveal delay-3" data-editable="true">El aporte es la integración deliberada y su adecuación al contexto peruano</div>
+        <p class="source-note" style="color:var(--bone);">Síntesis de la tesis, capítulo 4; referentes [12], [13], [16], [30], [31], [38] y [39].</p>
+        <div class="footer"><span>05 / Estado del arte</span><span>Integración frente a soluciones parciales</span></div>
+      </section>
+
+      <!-- ===========================================
+           06. JUSTIFICACIÓN
+           =========================================== -->
+      <section class="slide dark" data-title="Justificación">
+        <div class="topbar">
+          <span>02 · Justificación</span>
+          <span>Mediación, no espectáculo tecnológico</span>
+        </div>
+        <div style="position:absolute; left:74px; top:112px; right:74px; z-index:3;">
+          <h2 class="page-title compact reveal" data-editable="true">ArkeIA activa la tecnología solo cuando ayuda a comprender.</h2>
+        </div>
+        <div class="value-chain">
+          <article class="value-node tablet earth reveal delay-1">
+            <span class="icon">01</span>
+            <h3 data-editable="true">Detectar</h3>
+            <p data-editable="true">BLE reconoce la sala y estima la zona del visitante.</p>
+          </article>
+          <article class="value-node tablet gold reveal delay-2">
+            <span class="icon">02</span>
+            <h3 data-editable="true">Contextualizar</h3>
+            <p data-editable="true">La app relaciona ubicación, orientación, obra y recorrido.</p>
+          </article>
+          <article class="value-node tablet teal reveal delay-3">
+            <span class="icon">03</span>
+            <h3 data-editable="true">Comprender</h3>
+            <p data-editable="true">MuseRAG responde con evidencia bibliográfica y contexto curatorial.</p>
+          </article>
+          <article class="value-node tablet blue reveal delay-4">
+            <span class="icon">04</span>
+            <h3 data-editable="true">Explorar</h3>
+            <p data-editable="true">GLB, AR y recorridos VR revelan estados, detalles y espacios difíciles de observar.</p>
+          </article>
+          <article class="value-node tablet paper reveal delay-5">
+            <span class="icon">05</span>
+            <h3 data-editable="true">Compartir</h3>
+            <p data-editable="true">Videos culturales conectan la experiencia del museo con nuevas audiencias.</p>
+          </article>
+        </div>
+        <div class="footer"><span>06 / Justificación</span><span>Experiencia cultural continua</span></div>
+      </section>
+
+      <!-- ===========================================
+           07. OBJETIVOS
+           =========================================== -->
+      <section class="slide" data-title="Objetivos">
+        <div class="topbar">
+          <span>03 · Objetivos</span>
+          <span>Una guía que entiende el contexto</span>
+        </div>
+        <article class="objective-hero reveal-left">
+          <span class="mega">01</span>
+          <div>
+            <span class="section-kicker">Objetivo general</span>
+            <h2 data-editable="true">Desarrollar una plataforma de mediación cultural que personalice la visita mediante contexto físico, conocimiento verificable e interacción inmersiva.</h2>
+          </div>
+        </article>
+        <div class="objective-list">
+          <article class="objective-item tablet gold reveal delay-1">
+            <span class="n">A</span>
+            <p data-editable="true">Identificar sala, zona y obra probable sin interrumpir la experiencia física del visitante.</p>
+          </article>
+          <article class="objective-item tablet teal reveal delay-2">
+            <span class="n">B</span>
+            <p data-editable="true">Ofrecer narración, preguntas y respuestas contextualizadas con fuentes culturales trazables.</p>
+          </article>
+          <article class="objective-item tablet earth reveal delay-3">
+            <span class="n">C</span>
+            <p data-editable="true">Integrar recursos 3D, AR, VR y contenido social como capas complementarias de aprendizaje.</p>
+          </article>
+        </div>
+        <div class="footer"><span>07 / Objetivos</span><span>ArkeIA</span></div>
+      </section>
+
+      <!-- ===========================================
+           08. MARCO TEÓRICO
+           =========================================== -->
+      <section class="slide blue-field" data-title="Marco teórico">
+        <div class="topbar">
+          <span>04 · Marco teórico</span>
+          <span>Seis fundamentos del diseño</span>
+        </div>
+        <div style="position:absolute; left:70px; top:104px; right:70px; z-index:3;">
+          <h2 class="page-title compact reveal" data-editable="true">El contexto convierte datos en mediación cultural</h2>
+        </div>
+        <div class="framework-grid">
+          <article class="framework-card tablet gold reveal delay-1">
+            <span class="symbol">M</span>
+            <div>
+              <h3 data-editable="true">Mediación in situ</h3>
+              <p data-editable="true">La capa digital acompaña la visita física y amplía el alcance de la curaduría sin sustituirla.</p>
+            </div>
+          </article>
+          <article class="framework-card tablet paper reveal delay-2">
+            <span class="symbol">S</span>
+            <div>
+              <h3 data-editable="true">Contexto semántico</h3>
+              <p data-editable="true">Sala, zona y recorrido son unidades interpretativas, no simples coordenadas geométricas.</p>
+            </div>
+          </article>
+          <article class="framework-card tablet teal reveal delay-3">
+            <span class="symbol">L</span>
+            <div>
+              <h3 data-editable="true">Localización funcional</h3>
+              <p data-editable="true">El valor está en reconocer el contexto probable con fiabilidad suficiente, no en la precisión centimétrica.</p>
+            </div>
+          </article>
+          <article class="framework-card tablet earth reveal delay-4">
+            <span class="symbol">V</span>
+            <div>
+              <h3 data-editable="true">Multimodalidad</h3>
+              <p data-editable="true">Texto, audio y voz sostienen continuidad interpretativa y diferentes rutas de accesibilidad.</p>
+            </div>
+          </article>
+          <article class="framework-card tablet blue reveal delay-5">
+            <span class="symbol">R</span>
+            <div>
+              <h3 data-editable="true">RAG y trazabilidad</h3>
+              <p data-editable="true">La respuesta se subordina al corpus curatorial y conserva evidencia documental verificable.</p>
+            </div>
+          </article>
+          <article class="framework-card tablet gold reveal delay-6">
+            <span class="symbol">E</span>
+            <div>
+              <h3 data-editable="true">Escalabilidad responsable</h3>
+              <p data-editable="true">Modularidad, bajo costo y despliegue progresivo responden a la heterogeneidad institucional peruana.</p>
+            </div>
+          </article>
+        </div>
+        <p class="source-note" style="color:var(--bone);">Síntesis de la tesis, capítulo 6: mediación, contexto espacial, multimodalidad, RAG y sostenibilidad.</p>
+        <div class="footer"><span>08 / Marco teórico</span><span>Mediación · Contexto · Evidencia · Escalabilidad</span></div>
+      </section>
+
+      <!-- ===========================================
+           09. CRITERIOS TECNOLÓGICOS
+           =========================================== -->
+      <section class="slide" data-title="Criterios tecnológicos">
+        <div class="topbar">
+          <span>04 · Marco teórico</span>
+          <span>Diseñar alrededor de las restricciones</span>
+        </div>
+        <div style="position:absolute; left:66px; top:104px; right:66px; z-index:3;">
+          <h2 class="page-title compact reveal" data-editable="true">Tecnología suficiente, accesible y trazable</h2>
+        </div>
+        <div class="decision-grid">
+          <article class="decision-card tablet earth reveal delay-1">
+            <span class="decision-mark">BLE</span>
+            <h3 data-editable="true">Proximidad ligera</h3>
+            <p data-editable="true">Advertising de bajo consumo y RSSI para reconocer sala o zona con despliegue incremental.</p>
+          </article>
+          <article class="decision-card tablet gold reveal delay-2">
+            <span class="decision-mark">BYOD</span>
+            <h3 data-editable="true">Dispositivo disponible</h3>
+            <p data-editable="true">El smartphone reúne Bluetooth, sensores, micrófono, audio y pantalla sin hardware dedicado por visitante.</p>
+          </article>
+          <article class="decision-card tablet teal reveal delay-3">
+            <span class="decision-mark">VOZ</span>
+            <h3 data-editable="true">Acceso multimodal</h3>
+            <p data-editable="true">TTS y STT reducen dependencia de lectura y mantienen la mirada en el entorno físico.</p>
+          </article>
+          <article class="decision-card tablet blue reveal delay-4">
+            <span class="decision-mark">RAG</span>
+            <h3 data-editable="true">IA gobernada</h3>
+            <p data-editable="true">La recuperación previa limita respuestas libres y mantiene coherencia con las fuentes del museo.</p>
+          </article>
+        </div>
+        <p class="source-note">Fuentes clave: Wang (2024), Verde et al. (2023), Android Developers, Leitch et al. (2023), Lewis et al. (2020) y Béchard & Ayala (2024).</p>
+        <div class="footer"><span>09 / Criterios</span><span>Costo · Accesibilidad · Trazabilidad</span></div>
+      </section>
+
+      <!-- ===========================================
+           10. METODOLOGÍA
+           =========================================== -->
+      <section class="slide" data-title="Metodología">
+        <div class="topbar">
+          <span>05 · Metodología y avances</span>
+          <span>Construcción iterativa del MVP</span>
+        </div>
+        <div style="position:absolute; left:66px; top:105px; right:66px; z-index:3;">
+          <h2 class="page-title reveal" data-editable="true">Diseñar, probar, medir y volver al museo</h2>
+        </div>
+        <div class="method-track">
+          <article class="method-step tablet earth reveal delay-1">
+            <span class="n">01</span>
+            <h3 data-editable="true">Investigar</h3>
+            <p data-editable="true">Flujo museográfico, bibliografía, necesidades del visitante y restricciones del dispositivo.</p>
+          </article>
+          <article class="method-step tablet gold reveal delay-2">
+            <span class="n">02</span>
+            <h3 data-editable="true">Modelar</h3>
+            <p data-editable="true">Salas, zonas, obras, QR, capacidades inmersivas y contratos de contenido.</p>
+          </article>
+          <article class="method-step tablet teal reveal delay-3">
+            <span class="n">03</span>
+            <h3 data-editable="true">Construir</h3>
+            <p data-editable="true">Repositorios desacoplados para app, IoT, conocimiento, 3D y comunicación.</p>
+          </article>
+          <article class="method-step tablet blue reveal delay-4">
+            <span class="n">04</span>
+            <h3 data-editable="true">Simular</h3>
+            <p data-editable="true">Bridge de ubicación y activos locales para validar el recorrido antes del despliegue físico.</p>
+          </article>
+          <article class="method-step tablet paper reveal delay-5">
+            <span class="n">05</span>
+            <h3 data-editable="true">Validar</h3>
+            <p data-editable="true">Pruebas en celular, QA de GLB, documentación, logs y evaluación progresiva del visitante.</p>
+          </article>
+        </div>
+        <div class="method-line">
+          <span>Descubrimiento</span><span>Prototipo</span><span>Prueba técnica</span><span>Piloto museográfico</span>
+        </div>
+        <div class="footer"><span>10 / Metodología</span><span>MVP evolutivo</span></div>
+      </section>
+
+      <!-- ===========================================
+           11. ECOSISTEMA DE REPOSITORIOS
+           =========================================== -->
+      <section class="slide dark" data-title="Arquitectura">
+        <div class="topbar">
+          <span>05 · Metodología y avances</span>
+          <span>Arquitectura del ecosistema</span>
+        </div>
+        <div class="ecosystem">
+          <svg class="connector-map" viewBox="0 0 1800 820" aria-hidden="true">
+            <path d="M400 145 C620 145 650 300 760 350"/>
+            <path d="M400 620 C590 620 650 510 760 465"/>
+            <path d="M1400 145 C1180 145 1140 300 1040 350"/>
+            <path d="M1400 620 C1200 620 1140 510 1040 465"/>
+            <path d="M900 630 C900 585 900 565 900 550"/>
+          </svg>
+          <article class="system-node has-image node-iot tablet reveal delay-1" style="--node-image:url('assets/simulator-demo.png');">
+            <h3 data-editable="true">iot-museiq</h3>
+            <p data-editable="true">ESP32 BLE y simulador de ubicación: sala, zona y proximidad.</p>
+          </article>
+          <article class="system-node has-image node-app tablet reveal delay-2" style="--node-image:url('assets/app-experience.png');">
+            <h3 data-editable="true">museiqApp</h3>
+            <p data-editable="true">Experiencia del visitante: recorrido, QR, audio, preguntas, AR y VR.</p>
+          </article>
+          <article class="system-node has-image node-rag tablet reveal delay-3" style="--node-image:url('assets/muserag-concept.png');">
+            <h3 data-editable="true">MuseRAG</h3>
+            <p data-editable="true">Biblioteca cultural, recuperación semántica, respuestas y fuentes.</p>
+          </article>
+          <article class="system-node has-image node-3d tablet reveal delay-4" style="--node-image:url('assets/muse3d-concept.png');">
+            <h3 data-editable="true">Muse3D</h3>
+            <p data-editable="true">Exportación, optimización, validación y catálogo de modelos GLB.</p>
+          </article>
+          <article class="system-node has-image node-video tablet reveal delay-5" style="--node-image:url('assets/video-obelisco.png');">
+            <h3 data-editable="true">Cultural Video</h3>
+            <p data-editable="true">Videos verticales con mapas, 3D, voz y evidencia para comunidad.</p>
+          </article>
+          <div class="ecosystem-core reveal-scale">
+            <img src="assets/arkeia-logo.png" alt="ArkeIA">
+          </div>
+        </div>
+        <div class="footer"><span>11 / Arquitectura</span><span>Un ecosistema, una experiencia</span></div>
+      </section>
+
+      <!-- ===========================================
+           12. RECORRIDO DEL VISITANTE
+           =========================================== -->
+      <section class="slide" data-title="Recorrido">
+        <div class="topbar">
+          <span>05 · Metodología y avances</span>
+          <span>Flujo del visitante</span>
+        </div>
+        <div style="position:absolute; left:64px; top:102px; right:64px; z-index:3;">
+          <h2 class="page-title reveal" data-editable="true">Antes, durante y después del museo</h2>
+        </div>
+        <div class="journey-strip">
+          <article class="journey-step tablet earth reveal delay-1">
+            <span class="journey-icon">01</span>
+            <div><h3 data-editable="true">Descubre</h3><p data-editable="true">Contenido cultural en redes.</p></div>
+          </article>
+          <article class="journey-step tablet gold reveal delay-2">
+            <span class="journey-icon">02</span>
+            <div><h3 data-editable="true">Ingresa</h3><p data-editable="true">Selecciona museo e inicia visita.</p></div>
+          </article>
+          <article class="journey-step tablet teal reveal delay-3">
+            <span class="journey-icon">03</span>
+            <div><h3 data-editable="true">Se ubica</h3><p data-editable="true">BLE detecta sala o zona.</p></div>
+          </article>
+          <article class="journey-step tablet blue reveal delay-4">
+            <span class="journey-icon">04</span>
+            <div><h3 data-editable="true">Observa</h3><p data-editable="true">La app sugiere una obra probable.</p></div>
+          </article>
+          <article class="journey-step tablet paper reveal delay-5">
+            <span class="journey-icon">05</span>
+            <div><h3 data-editable="true">Profundiza</h3><p data-editable="true">Escucha, pregunta o confirma por QR.</p></div>
+          </article>
+          <article class="journey-step tablet earth reveal delay-6">
+            <span class="journey-icon">06</span>
+            <div><h3 data-editable="true">Explora</h3><p data-editable="true">Interactúa con reconstrucciones 3D.</p></div>
+          </article>
+          <article class="journey-step tablet gold reveal delay-6">
+            <span class="journey-icon">07</span>
+            <div><h3 data-editable="true">Se sumerge</h3><p data-editable="true">Una sala especial activa el tour VR.</p></div>
+          </article>
+        </div>
+        <div class="journey-caption reveal delay-6" data-editable="true">La obra física sigue siendo el centro de la experiencia</div>
+        <div class="footer"><span>12 / Recorrido</span><span>ArkeIA acompaña, no interrumpe</span></div>
+      </section>
+
+      <!-- ===========================================
+           13. AVANCE APP + IOT
+           =========================================== -->
+      <section class="slide" data-title="App e IoT">
+        <div class="topbar">
+          <span>05 · Metodología y avances</span>
+          <span>App contextual + capa física</span>
+        </div>
+        <div class="product-layout">
+          <figure class="product-image reveal-left">
+            <img src="assets/app-experience.png" alt="Pantallas conceptuales de la experiencia ArkeIA">
+          </figure>
+          <div class="product-notes">
+            <article class="tablet gold reveal delay-1">
+              <h3 data-editable="true">Sala normal</h3>
+              <p data-editable="true">Seis zonas y obras de prueba, sugerencia contextual y confirmación mediante QR.</p>
+            </article>
+            <article class="tablet teal reveal delay-2">
+              <h3 data-editable="true">Interacción</h3>
+              <p data-editable="true">Narración, voz, preguntas, fuentes e imágenes relacionadas sin abandonar la obra.</p>
+            </article>
+            <article class="tablet blue reveal delay-3">
+              <h3 data-editable="true">Desarrollo seguro</h3>
+              <p data-editable="true">Simulador de ubicación desde terminal para probar el recorrido antes de instalar beacons.</p>
+              <div class="demo-actions">
+                <a class="demo-link" href="http://eduardoguev.me/Tesis/" target="_blank" rel="noreferrer">Abrir demo</a>
+                <a class="demo-link" href="https://github.com/eduardo202020/Tesis/tree/main/tesis/simulacion" target="_blank" rel="noreferrer">Ver código</a>
+              </div>
+            </article>
+          </div>
+        </div>
+        <div class="footer"><span>13 / Avances</span><span>React Native · Expo · ESP32 BLE</span></div>
+      </section>
+
+      <!-- ===========================================
+           14. AVANCE IA + 3D
+           =========================================== -->
+      <section class="slide dark" data-title="IA y 3D">
+        <div class="topbar">
+          <span>05 · Metodología y avances</span>
+          <span>Conocimiento verificable + activos reutilizables</span>
+        </div>
+        <div class="dual-showcase">
+          <article class="showcase-panel reveal-left">
+            <img src="assets/muserag-concept.png" alt="Concepto de la experiencia MuseRAG">
+            <div class="showcase-overlay">
+              <h3 data-editable="true">MuseRAG</h3>
+              <p data-editable="true">Responde con el contexto de la sala y la obra, recuperando fragmentos de una biblioteca especializada y conservando las fuentes.</p>
+            </div>
+          </article>
+          <article class="showcase-panel reveal delay-2">
+            <img src="assets/muse3d-concept.png" alt="Pipeline de modelos 3D">
+            <div class="showcase-overlay">
+              <h3 data-editable="true">Muse3D</h3>
+              <p data-editable="true">Transforma fuentes Blender o GLB en activos móviles optimizados, validados, catalogados y listos para publicar.</p>
+            </div>
+          </article>
+        </div>
+        <div class="footer"><span>14 / Avances</span><span>Fuentes + GLB + contratos de contenido</span></div>
+      </section>
+
+      <!-- ===========================================
+           15. AVANCE VR
+           =========================================== -->
+      <section class="slide dark" data-title="Modo inmersivo">
+        <div class="vr-hero">
+          <img src="assets/immersive-experience.png" alt="Experiencia inmersiva con headset móvil">
+        </div>
+        <div class="vr-copy reveal-left">
+          <span class="section-kicker accent">Sala inmersiva</span>
+          <h2 data-editable="true">Recorrer un espacio reconstruido desde dentro</h2>
+          <p data-editable="true">Cuando BLE identifica una sala VR, ArkeIA ofrece recorridos Cardboard con visión estereoscópica, seguimiento de cabeza, ruta, narración por tramo y entorno 3D.</p>
+          <div class="vr-features">
+            <span class="pill"><span class="pill-dot"></span>SBS</span>
+            <span class="pill"><span class="pill-dot"></span>Head tracking</span>
+            <span class="pill"><span class="pill-dot"></span>Tour guiado</span>
+            <span class="pill"><span class="pill-dot"></span>Narración</span>
+          </div>
+        </div>
+        <div class="topbar" style="color:var(--bone);">
+          <span>05 · Metodología y avances</span>
+          <span>VR accesible con un celular</span>
+        </div>
+        <div class="footer" style="color:var(--bone);"><span>15 / Avances</span><span>Experiencias inmersivas locales</span></div>
+      </section>
+
+      <!-- ===========================================
+           16. COMUNIDAD Y CONTENIDO
+           =========================================== -->
+      <section class="slide" data-title="Comunidad">
+        <div class="topbar">
+          <span>05 · Metodología y avances</span>
+          <span>De la investigación a la comunidad</span>
+        </div>
+        <div class="video-grid">
+          <figure class="video-card reveal-left" data-label="Obelisco Tello">
+            <video muted loop playsinline preload="metadata" poster="assets/video-obelisco.png">
+              <source src="assets/obelisco-tello.mp4" type="video/mp4">
+            </video>
+          </figure>
+          <figure class="video-card reveal delay-2" data-label="Red cultural Chavín">
+            <video muted loop playsinline preload="metadata" poster="assets/video-chavin.png">
+              <source src="assets/chavin-red-cultural.mp4" type="video/mp4">
+            </video>
+          </figure>
+          <article class="community-copy reveal delay-3">
+            <span class="section-kicker accent">Cultural Video MVP</span>
+            <h2 data-editable="true">La visita comienza antes de entrar al museo</h2>
+            <p data-editable="true">El motor genera videos verticales con mapas, piezas 3D, voz y Evidence Cards. La misma base documental alimenta las respuestas de la app y el contenido público.</p>
+            <p class="quote-mini" data-editable="true">Descubrir → visitar → comprender → compartir</p>
+          </article>
+        </div>
+        <div class="footer"><span>16 / Avances</span><span>Remotion · Voicebox · Evidencia cultural</span></div>
+      </section>
+
+      <!-- ===========================================
+           17. RESULTADOS PRELIMINARES
+           =========================================== -->
+      <section class="slide blue-field" data-title="Resultados">
+        <div class="topbar">
+          <span>06 · Resultados preliminares</span>
+          <span>MVP integrado</span>
+        </div>
+        <div style="position:absolute; left:66px; top:104px; right:66px; z-index:3;">
+          <h2 class="page-title reveal" data-editable="true">Capacidades demostrables hoy</h2>
+        </div>
+        <div class="results-grid">
+          <article class="result-card tablet gold reveal delay-1">
+            <span class="big-stat">5</span>
+            <div><span class="stat-label">Repositorios especializados</span><p data-editable="true">App, IoT, RAG, 3D y contenidos conectados por contratos claros.</p></div>
+          </article>
+          <article class="result-card tablet teal reveal delay-2">
+            <span class="big-stat">6</span>
+            <div><span class="stat-label">Obras en sala piloto</span><p data-editable="true">Zonas, QR y recursos complementarios para probar el flujo normal.</p></div>
+          </article>
+          <article class="result-card tablet earth reveal delay-3">
+            <span class="big-stat">4</span>
+            <div><span class="stat-label">Recorridos VR locales</span><p data-editable="true">Experiencias seleccionables con rutas creadas desde Blender.</p></div>
+          </article>
+          <article class="result-card tablet paper reveal delay-4">
+            <span class="big-stat">8</span>
+            <div><span class="stat-label">Templates culturales</span><p data-editable="true">Pieza 3D, cultura, efeméride, misterio, sitio, ruta, personaje y comparación.</p></div>
+          </article>
+          <article class="result-card tablet blue reveal delay-5">
+            <span class="big-stat">2</span>
+            <div><span class="stat-label">Videos MVP terminados</span><p data-editable="true">Narración generada, evidencia visible y formato vertical listo para mostrar.</p></div>
+          </article>
+          <article class="result-card tablet gold reveal delay-6">
+            <span class="big-stat">1</span>
+            <div><span class="stat-label">Base de conocimiento compartida</span><p data-editable="true">La biblioteca especializada conecta experiencia móvil y comunicación social.</p></div>
+          </article>
+        </div>
+        <div class="footer"><span>17 / Resultados</span><span>Validación técnica antes del piloto físico</span></div>
+      </section>
+
+      <!-- ===========================================
+           18. PRÓXIMOS PASOS Y CIERRE
+           =========================================== -->
+      <section class="slide" data-title="Próximos pasos">
+        <div class="topbar">
+          <span>06 · Resultados y próximos pasos</span>
+          <span>Del MVP al piloto museográfico</span>
+        </div>
+        <div class="next-layout">
+          <div class="next-list">
+            <article class="next-item tablet earth reveal delay-1">
+              <span class="n">01</span>
+              <div><h3 data-editable="true">Piloto físico</h3><p data-editable="true">Calibrar RSSI, orientación y movimiento con los beacons S1–S4 en una sala real.</p></div>
+            </article>
+            <article class="next-item tablet gold reveal delay-2">
+              <span class="n">02</span>
+              <div><h3 data-editable="true">Catálogo 3D único</h3><p data-editable="true">Cerrar Muse3D → MuseRAG → app y reutilizar el mismo catálogo en videos.</p></div>
+            </article>
+            <article class="next-item tablet teal reveal delay-3">
+              <span class="n">03</span>
+              <div><h3 data-editable="true">Narrativa remota</h3><p data-editable="true">Servir guiones, hotspots y narración de tours desde contratos curatoriales.</p></div>
+            </article>
+            <article class="next-item tablet blue reveal delay-4">
+              <span class="n">04</span>
+              <div><h3 data-editable="true">Evaluar impacto</h3><p data-editable="true">Medir comprensión, orientación, satisfacción y deseo de continuar explorando.</p></div>
+            </article>
+          </div>
+          <aside class="closing-card reveal-scale delay-2">
+            <img src="assets/arkeia-logo-horizontal-cropped.png" alt="ArkeIA">
+            <h2 data-editable="true">El patrimonio no necesita más pantallas. Necesita mejores conexiones.</h2>
+            <p data-editable="true">ArkeIA · El pasado cobra vida</p>
+          </aside>
+        </div>
+        <div class="footer"><span>18 / Cierre</span><span>Gracias</span></div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Controles externos al escenario fijo. -->
+  <nav class="deck-controls" aria-label="Controles de presentación">
+    <button id="prevSlide" aria-label="Diapositiva anterior">‹</button>
+    <span class="page-indicator" id="pageIndicator">01 / 18</span>
+    <div class="progress-track" aria-hidden="true"><div class="progress-fill" id="progressFill"></div></div>
+    <button id="nextSlide" aria-label="Diapositiva siguiente">›</button>
+  </nav>
+
+  <!-- Edición local: mueve el cursor a la esquina superior izquierda o pulsa E. -->
+  <div class="edit-hotzone" aria-hidden="true"></div>
+  <button class="edit-toggle" id="editToggle" title="Modo edición (E)" aria-label="Activar modo edición">✎</button>
+  <div class="edit-toast" id="editToast">Cambios guardados</div>
+
+  <script>
+    /* ===========================================
+       CONTROLADOR DE PRESENTACIÓN
+       Gestiona escala 16:9, teclado, rueda, tacto y video.
+       =========================================== */
+    class SlidePresentation {
+      constructor() {
+        this.slides = Array.from(document.querySelectorAll(".slide"));
+        this.stage = document.getElementById("deckStage");
+        this.currentSlide = 0;
+        this.isNavigating = false;
+        this.touchStartX = 0;
+        this.touchStartY = 0;
+
+        this.setupStageScale();
+        this.setupKeyboardNav();
+        this.setupTouchNav();
+        this.setupWheelNav();
+        this.setupButtons();
+        this.restoreSlideFromHash();
+        this.showSlide(this.currentSlide, false);
+      }
+
+      setupStageScale() {
+        const scale = () => {
+          const factor = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+          const x = (window.innerWidth - 1920 * factor) / 2;
+          const y = (window.innerHeight - 1080 * factor) / 2;
+          this.stage.style.transform = `translate(${x}px, ${y}px) scale(${factor})`;
+        };
+        scale();
+        window.addEventListener("resize", scale);
+      }
+
+      setupKeyboardNav() {
+        document.addEventListener("keydown", (event) => {
+          if (event.target?.isContentEditable) return;
+          if (["ArrowRight", "ArrowDown", " ", "PageDown"].includes(event.key)) {
+            event.preventDefault();
+            this.next();
+          }
+          if (["ArrowLeft", "ArrowUp", "PageUp"].includes(event.key)) {
+            event.preventDefault();
+            this.prev();
+          }
+          if (event.key === "Home") this.showSlide(0);
+          if (event.key === "End") this.showSlide(this.slides.length - 1);
+        });
+      }
+
+      setupTouchNav() {
+        document.addEventListener("touchstart", (event) => {
+          this.touchStartX = event.changedTouches[0].screenX;
+          this.touchStartY = event.changedTouches[0].screenY;
+        }, { passive: true });
+
+        document.addEventListener("touchend", (event) => {
+          const dx = event.changedTouches[0].screenX - this.touchStartX;
+          const dy = event.changedTouches[0].screenY - this.touchStartY;
+          if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy)) {
+            dx < 0 ? this.next() : this.prev();
+          }
+        }, { passive: true });
+      }
+
+      setupWheelNav() {
+        document.addEventListener("wheel", (event) => {
+          if (this.isNavigating || Math.abs(event.deltaY) < 20) return;
+          this.isNavigating = true;
+          event.deltaY > 0 ? this.next() : this.prev();
+          window.setTimeout(() => { this.isNavigating = false; }, 500);
+        }, { passive: true });
+      }
+
+      setupButtons() {
+        document.getElementById("prevSlide").addEventListener("click", () => this.prev());
+        document.getElementById("nextSlide").addEventListener("click", () => this.next());
+      }
+
+      restoreSlideFromHash() {
+        const requested = Number.parseInt(window.location.hash.replace("#", ""), 10);
+        if (Number.isFinite(requested)) {
+          this.currentSlide = Math.max(0, Math.min(requested - 1, this.slides.length - 1));
+        }
+      }
+
+      showSlide(index, updateHash = true) {
+        this.currentSlide = Math.max(0, Math.min(index, this.slides.length - 1));
+        this.slides.forEach((slide, slideIndex) => {
+          const active = slideIndex === this.currentSlide;
+          slide.classList.toggle("active", active);
+          slide.classList.toggle("visible", active);
+          slide.setAttribute("aria-hidden", String(!active));
+
+          slide.querySelectorAll("video").forEach((video) => {
+            if (active) {
+              video.currentTime = 0;
+              video.play().catch(() => {});
+            } else {
+              video.pause();
+            }
+          });
+        });
+
+        const current = String(this.currentSlide + 1).padStart(2, "0");
+        const total = String(this.slides.length).padStart(2, "0");
+        document.getElementById("pageIndicator").textContent = `${current} / ${total}`;
+        document.getElementById("progressFill").style.width =
+          `${((this.currentSlide + 1) / this.slides.length) * 100}%`;
+        document.title = `ArkeIA | ${this.slides[this.currentSlide].dataset.title}`;
+        if (updateHash) history.replaceState(null, "", `#${this.currentSlide + 1}`);
+      }
+
+      next() {
+        this.showSlide(this.currentSlide + 1);
+      }
+
+      prev() {
+        this.showSlide(this.currentSlide - 1);
+      }
+    }
+
+    /* ===========================================
+       EDICIÓN INLINE
+       Guarda textos editables en localStorage.
+       =========================================== */
+    class InlineEditor {
+      constructor() {
+        this.storageKey = "arkeia-presentation-edits-v1";
+        this.isActive = false;
+        this.editables = Array.from(document.querySelectorAll('[data-editable="true"]'));
+        this.toggle = document.getElementById("editToggle");
+        this.toast = document.getElementById("editToast");
+        this.restore();
+        this.setup();
+      }
+
+      setup() {
+        this.toggle.addEventListener("click", () => this.toggleEditMode());
+        document.querySelector(".edit-hotzone").addEventListener("click", () => this.toggleEditMode());
+
+        document.addEventListener("keydown", (event) => {
+          if ((event.key === "e" || event.key === "E") && !event.target?.isContentEditable) {
+            this.toggleEditMode();
+          }
+          if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "s" && this.isActive) {
+            event.preventDefault();
+            this.save();
+          }
+        });
+
+        this.editables.forEach((element) => {
+          element.addEventListener("input", () => this.save(false));
+          element.addEventListener("blur", () => this.save());
+        });
+      }
+
+      toggleEditMode() {
+        this.isActive = !this.isActive;
+        document.body.classList.toggle("edit-mode", this.isActive);
+        this.toggle.classList.toggle("active", this.isActive);
+        this.editables.forEach((element) => {
+          element.contentEditable = String(this.isActive);
+          element.spellcheck = this.isActive;
+        });
+      }
+
+      save(showToast = true) {
+        const values = this.editables.map((element) => element.innerHTML);
+        localStorage.setItem(this.storageKey, JSON.stringify(values));
+        if (showToast) {
+          this.toast.classList.add("show");
+          window.setTimeout(() => this.toast.classList.remove("show"), 1300);
+        }
+      }
+
+      restore() {
+        const saved = localStorage.getItem(this.storageKey);
+        if (!saved) return;
+        try {
+          const values = JSON.parse(saved);
+          this.editables.forEach((element, index) => {
+            if (typeof values[index] === "string") element.innerHTML = values[index];
+          });
+        } catch {
+          localStorage.removeItem(this.storageKey);
+        }
+      }
+    }
+
+    /* Hotzone con margen de gracia para alcanzar el botón. */
+    const hotzone = document.querySelector(".edit-hotzone");
+    const editToggle = document.getElementById("editToggle");
+    let hideTimeout = null;
+
+    hotzone.addEventListener("mouseenter", () => {
+      clearTimeout(hideTimeout);
+      editToggle.classList.add("show");
+    });
+    hotzone.addEventListener("mouseleave", () => {
+      hideTimeout = window.setTimeout(() => {
+        if (!editToggle.classList.contains("active")) editToggle.classList.remove("show");
+      }, 400);
+    });
+    editToggle.addEventListener("mouseenter", () => clearTimeout(hideTimeout));
+    editToggle.addEventListener("mouseleave", () => {
+      hideTimeout = window.setTimeout(() => {
+        if (!editToggle.classList.contains("active")) editToggle.classList.remove("show");
+      }, 400);
+    });
+
+    const presentation = new SlidePresentation();
+    const editor = new InlineEditor();
+  </script>
+</body>
+</html>
