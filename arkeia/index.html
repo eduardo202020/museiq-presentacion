@@ -1060,15 +1060,15 @@
        =========================================== */
     .ecosystem {
       position: absolute;
-      inset: 172px 62px 90px;
+      inset: 150px 48px 82px;
     }
 
     .ecosystem-core {
       position: absolute;
-      left: 730px;
-      top: 230px;
-      width: 340px;
-      height: 340px;
+      left: 762px;
+      top: 20px;
+      width: 300px;
+      height: 300px;
       border: 8px solid var(--gold);
       border-radius: 50%;
       background: var(--blue-deep);
@@ -1080,25 +1080,33 @@
     }
 
     .ecosystem-core img {
-      width: 210px;
-      height: 210px;
+      width: 190px;
+      height: 190px;
       object-fit: contain;
     }
 
     .system-node {
       position: absolute;
-      width: 360px;
-      min-height: 180px;
+      width: 600px;
+      min-height: 340px;
       border-radius: 26px;
-      padding: 28px 30px;
+      padding: 32px 34px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
       z-index: 3;
     }
 
     .system-node.has-image {
       color: var(--bone);
-      border: 2px solid rgba(255, 255, 255, 0.24);
+      border: 2px solid rgba(255, 255, 255, 0.32);
       background:
-        linear-gradient(110deg, rgba(3, 10, 23, 0.94), rgba(3, 10, 23, 0.7)),
+        linear-gradient(
+          to top,
+          rgba(3, 10, 23, 0.98) 0%,
+          rgba(3, 10, 23, 0.76) 38%,
+          rgba(3, 10, 23, 0.12) 100%
+        ),
         var(--node-image) center / cover no-repeat;
       box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
     }
@@ -1120,11 +1128,11 @@
       line-height: 1.22;
     }
 
-    .node-iot { left: 40px; top: 55px; }
-    .node-app { left: 40px; top: 525px; }
-    .node-rag { right: 40px; top: 55px; }
-    .node-3d { right: 40px; top: 525px; }
-    .node-video { left: 720px; top: 610px; width: 380px; }
+    .node-iot { left: 0; top: 0; }
+    .node-app { left: 0; top: 400px; }
+    .node-rag { right: 0; top: 0; }
+    .node-3d { right: 0; top: 400px; }
+    .node-video { left: 612px; top: 400px; width: 600px; }
 
     .connector-map {
       position: absolute;
@@ -1237,11 +1245,16 @@
       background: var(--night);
     }
 
-    .product-image img {
+    .product-image img,
+    .product-image video {
       width: 100%;
       height: 100%;
       object-fit: contain;
       display: block;
+    }
+
+    .product-image video {
+      background: var(--night);
     }
 
     .product-notes {
@@ -2135,12 +2148,12 @@
           <span>Arquitectura del ecosistema</span>
         </div>
         <div class="ecosystem">
-          <svg class="connector-map" viewBox="0 0 1800 820" aria-hidden="true">
-            <path d="M400 145 C620 145 650 300 760 350"/>
-            <path d="M400 620 C590 620 650 510 760 465"/>
-            <path d="M1400 145 C1180 145 1140 300 1040 350"/>
-            <path d="M1400 620 C1200 620 1140 510 1040 465"/>
-            <path d="M900 630 C900 585 900 565 900 550"/>
+          <svg class="connector-map" viewBox="0 0 1824 820" aria-hidden="true">
+            <path d="M762 170 C700 170 660 170 600 170"/>
+            <path d="M1062 170 C1120 170 1165 170 1224 170"/>
+            <path d="M810 280 C690 330 620 370 540 430"/>
+            <path d="M1014 280 C1135 330 1205 370 1284 430"/>
+            <path d="M912 320 C912 350 912 370 912 400"/>
           </svg>
           <article class="system-node has-image node-iot tablet reveal delay-1" style="--node-image:url('assets/simulator-demo.png');">
             <h3 data-editable="true">iot-museiq</h3>
@@ -2220,11 +2233,20 @@
       <section class="slide" data-title="App e IoT">
         <div class="topbar">
           <span>05 · Metodología y avances</span>
-          <span>App contextual + capa física</span>
+          <span>Demo integrada · App + recorrido simulado</span>
         </div>
         <div class="product-layout">
           <figure class="product-image reveal-left">
-            <img src="assets/app-experience.png" alt="Pantallas conceptuales de la experiencia ArkeIA">
+            <video
+              muted
+              controls
+              playsinline
+              preload="metadata"
+              poster="assets/app-experience.png"
+              aria-label="Demostración del flujo de la aplicación ArkeIA y el recorrido simulado"
+            >
+              <source src="assets/prueba.mp4" type="video/mp4">
+            </video>
           </figure>
           <div class="product-notes">
             <article class="tablet gold reveal delay-1">
@@ -2239,6 +2261,7 @@
               <h3 data-editable="true">Desarrollo seguro</h3>
               <p data-editable="true">Simulador de ubicación desde terminal para probar el recorrido antes de instalar beacons.</p>
               <div class="demo-actions">
+                <a class="demo-link" href="https://youtu.be/fwv-_J_4pZA" target="_blank" rel="noreferrer">Ver video</a>
                 <a class="demo-link" href="http://eduardoguev.me/Tesis/" target="_blank" rel="noreferrer">Abrir demo</a>
                 <a class="demo-link" href="https://github.com/eduardo202020/Tesis/tree/main/tesis/simulacion" target="_blank" rel="noreferrer">Ver código</a>
               </div>

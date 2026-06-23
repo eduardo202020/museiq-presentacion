@@ -10,9 +10,13 @@ los repositorios que componen el ecosistema ArkeIA.
 
 ## Demostración
 
+- Video del flujo integrado: <https://youtu.be/fwv-_J_4pZA>
 - Simulación pública: <http://eduardoguev.me/Tesis/>
 - Código de la simulación:
   <https://github.com/eduardo202020/Tesis/tree/main/tesis/simulacion>
+
+`assets/prueba.mp4` se conserva únicamente como recurso local y está excluido
+de Git para evitar versionar un archivo de gran tamaño.
 
 ## Abrir
 

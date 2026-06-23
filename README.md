@@ -19,6 +19,8 @@ Abrir <http://127.0.0.1:4173>.
 La demostración funcional del recorrido está disponible en
 <http://eduardoguev.me/Tesis/>.
 
+Video del flujo integrado: <https://youtu.be/fwv-_J_4pZA>.
+
 ## Pruebas en Windows (PowerShell)
 
 ```powershell
