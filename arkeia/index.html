@@ -2242,6 +2242,7 @@
               controls
               playsinline
               preload="metadata"
+              data-playback-rate="1.5"
               poster="assets/app-experience.png"
               aria-label="Demostración del flujo de la aplicación ArkeIA y el recorrido simulado"
             >
@@ -2539,6 +2540,7 @@
 
           slide.querySelectorAll("video").forEach((video) => {
             if (active) {
+              video.playbackRate = Number(video.dataset.playbackRate ?? 1);
               video.currentTime = 0;
               video.play().catch(() => {});
             } else {
